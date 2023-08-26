@@ -1,5 +1,5 @@
 import { Typography } from "@mui/material";
-import { GlobalContextProps } from "../types";
+import { GlobalContextProps, DataToPresent } from "../types";
 import { createContext, useContext, useState, useEffect } from 'react'
 
 
@@ -8,7 +8,11 @@ const Context = createContext<GlobalContextProps>(undefined as any)
 export const GlobalContextProvider: React.FC<React.PropsWithChildren<{}>> = ({
     children
 }) => {
-    const [state, setState] = useState<string | undefined>(undefined)
+    const [state, setState] = useState<DataToPresent>({
+        firstname: undefined,
+        lastname: undefined,
+        middlename: undefined
+    })
     const handleFunction = () => {
         alert("hello world")
     }
