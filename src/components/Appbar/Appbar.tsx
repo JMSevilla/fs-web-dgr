@@ -9,7 +9,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 
 type AppBarProps = {
     onHandleClick: () => void
-    title: string
+    title: string | null
 }
 
 export const ApplicationBar = ({onHandleClick, title} : AppBarProps) => {

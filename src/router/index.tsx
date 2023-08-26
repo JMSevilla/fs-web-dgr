@@ -1,7 +1,7 @@
 import { Switch, Route } from 'react-router-dom'
 import { Home } from '../pages'
 import { PageProps } from './route'
-
+import { GlobalContextProvider } from '../core/context/GlobalContext'
 interface IRouterWithLoad {
     Component: React.ComponentType
     exact?: any
@@ -28,11 +28,13 @@ const DynamicRouting: React.FC<IRouterWithLoad> = ({
 const ApplicationRouter = () => {
     return (
         <Switch>
-            <DynamicRouting 
-                exact
-                path={PageProps.homepage.path}
-                Component={Home}
-            />
+            <GlobalContextProvider>
+                <DynamicRouting 
+                    exact
+                    path={PageProps.homepage.path}
+                    Component={Home}
+                />
+            </GlobalContextProvider>
         </Switch>
     )
 }
