@@ -29,7 +29,7 @@ export const ApplicationBar = ({onHandleClick, title} : AppBarProps) => {
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
             {title}
           </Typography>
-            <Button color="inherit" onClick={onHandleClick}>Login</Button>
+            <Button color="inherit" onClick={onHandleClick}>About Us</Button>
             </Toolbar>
         </AppBar>
         </Box>

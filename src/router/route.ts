@@ -5,8 +5,10 @@ type PathProps = {
 
 type RouteProps = {
     homepage : PathProps
+    aboutus : PathProps
 }
 
 export const PageProps : RouteProps = {
-    homepage: { path: "/" }
+    homepage: { path: "/" },
+    aboutus: { path: "/AboutUs/about-us"}
 }

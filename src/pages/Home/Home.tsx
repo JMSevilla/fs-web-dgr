@@ -1,12 +1,14 @@
-import React, { useState, useEffect, useCallback, ChangeEvent } from 'react'
+import React, { useState, useEffect, useCallback, ChangeEvent, ReactElement } from 'react'
 import { ApplicationBar, BasicTextField, BasicCard, BasicButton } from '../../components'
 import { Container, Grid, List, ListItem } from '@mui/material'
 import { useGlobalContext } from '../../core/context/GlobalContext'
 import axios , {AxiosResponse} from 'axios'
 import { config } from '../../core/config'
+import { useHistory } from 'react-router-dom'
 
-const HomePage: React.FC = () => {
+const HomePage = () => {
     const [names, setNames] = useState([])
+    const router = useHistory()
     const {
         state,
         setState
@@ -28,11 +30,20 @@ const HomePage: React.FC = () => {
     useEffect(() => {
         FetchFakeAPI()
     }, [])
+    const navigateToAboutUs = () => {
+        router.push({
+            pathname: '/AboutUs/about-us',
+            state: {
+                obj: state
+            }
+        })
+    }
     return ( 
         <>
             <ApplicationBar 
-            onHandleClick={() => {}}
-            title={"Hello world"} />
+                onHandleClick={navigateToAboutUs}
+                title="Navbar"
+            />
             <Container sx={{
                 marginTop: '100px'
             }} maxWidth='lg'>
@@ -80,5 +91,12 @@ const HomePage: React.FC = () => {
         </>
     )
 }
+
 export default HomePage
 
+
+/**
+ * Next TS
+ * getLayout << Pages.. 
+ * const getLayout = Component.getLayout ?? ((page) => page) // _app.tsx
+ */
