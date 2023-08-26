@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useCallback, ChangeEvent } from 'react'
 import { ApplicationBar, BasicTextField, BasicCard, BasicButton } from '../../components'
-import { Container, Grid } from '@mui/material'
+import { Container, Grid, List, ListItem } from '@mui/material'
 import { useGlobalContext } from '../../core/context/GlobalContext'
+import axios , {AxiosResponse} from 'axios'
+import { config } from '../../core/config'
 
 const HomePage: React.FC = () => {
+    const [names, setNames] = useState([])
     const {
         state,
         setState
@@ -15,6 +18,16 @@ const HomePage: React.FC = () => {
             [name] : value
         }))
     }
+    const FetchFakeAPI = () => {
+        axios.get(
+            `${config.values.DEV_URL}/users`
+        ).then((response: AxiosResponse | undefined) => {
+            setNames(response?.data)
+        })
+    }
+    useEffect(() => {
+        FetchFakeAPI()
+    }, [])
     return ( 
         <>
             <ApplicationBar 
@@ -58,6 +71,11 @@ const HomePage: React.FC = () => {
                     </Grid>
                     <Grid item xs={4}></Grid>
                 </Grid>
+                <List>
+                    {names.map((data: any, i) => (
+                        <ListItem key={i}>{data.name}</ListItem>
+                    ))}
+                </List>
             </Container>
         </>
     )
