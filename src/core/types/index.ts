@@ -10,3 +10,13 @@ export type GlobalContextProps = {
     setState: any
     handleFunction() : void
 }
+
+export type PostsDataUpdate = {
+    id: number
+    title: string
+    author: string
+    firstname: string
+    middlename: string
+    lastname: string
+    status: number
+}

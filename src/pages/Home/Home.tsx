@@ -1,13 +1,23 @@
 import React, { useState, useEffect, useCallback, ChangeEvent, ReactElement } from 'react'
-import { ApplicationBar, BasicTextField, BasicCard, BasicButton } from '../../components'
-import { Container, Grid, List, ListItem } from '@mui/material'
+import { ApplicationBar, BasicTextField, BasicCard, BasicButton, BasicDataGrid } from '../../components'
+import { Container, Grid, Typography } from '@mui/material'
 import { useGlobalContext } from '../../core/context/GlobalContext'
-import axios , {AxiosResponse} from 'axios'
-import { config } from '../../core/config'
+import { Http } from '../../core/api/http'
 import { useHistory } from 'react-router-dom'
+import { PostsDataUpdate } from '../../core/types'
+type PostProps = { 
+    id: number
+    title: string
+    author: string
+    firstname: string
+    middlename: string
+    lastname: string
+    status: number
+}
 
 const HomePage = () => {
-    const [names, setNames] = useState([])
+    const [posts, setPosts] = useState<PostProps[]>([])
+    const [loading, setLoading] = useState<boolean>(false)
     const router = useHistory()
     const {
         state,
@@ -20,16 +30,6 @@ const HomePage = () => {
             [name] : value
         }))
     }
-    const FetchFakeAPI = () => {
-        axios.get(
-            `${config.values.DEV_URL}/users`
-        ).then((response: AxiosResponse | undefined) => {
-            setNames(response?.data)
-        })
-    }
-    useEffect(() => {
-        FetchFakeAPI()
-    }, [])
     const navigateToAboutUs = () => {
         router.push({
             pathname: '/AboutUs/about-us',
@@ -37,6 +37,117 @@ const HomePage = () => {
                 obj: state
             }
         })
+    }
+    const ToggleActivation = (props: PostsDataUpdate) => {
+        new Http().updatePostsChangeStatus(props)
+        .then(res => {
+            setLoading(true)
+            setTimeout(() => {
+                setLoading(false)
+            setPosts(res.data)
+            }, 2000)
+            FetchPosts()
+        })
+    }
+    const columns = [
+        {
+            field: 'id',
+            headerName: 'ID', // column name
+            width: 80
+        },
+        {
+            field: 'title',
+            headerName: 'Title',
+            width: 170,
+            renderCell: (params: any) => (
+                <Typography variant='caption'>
+                    {params.row.title}
+                </Typography>
+            )
+        },
+        {
+            field: 'fullName',
+            headerName: 'Full Name',
+            valueGetter: (params: any) => `${params.row.firstname} ${params.row.middlename} ${params.row.lastname}`,
+            width: 180
+        },
+        {
+            field: 'author',
+            headerName: 'Author',
+            width: 80
+        },
+        {
+            field: 'status',
+            headerName: 'Status',
+            width: 80,
+            renderCell: (params: any) => {
+                if(params.row.status === 1){
+                    return `Active`
+                } else {
+                    return `Inactive`
+                }
+            }
+        },
+        {
+            headerName: 'Actions',
+            width: 170,
+            renderCell: (params: any) => {
+                if(params.row.status === 1) {
+                    return (
+                        <BasicButton 
+                            variant='contained'
+                            color='error'
+                            children='Deactivate'
+                            size='small'
+                            onClick={
+                                () => ToggleActivation({
+                                    id: params.row.id,
+                                    title: params.row.title,
+                                    author: params.row.author,
+                                    firstname: params.row.firstname,
+                                    middlename: params.row.middlename,
+                                    lastname: params.row.lastname,
+                                    status: 0
+                                })
+                            }
+                        />
+                    )
+                } else {
+                    return (
+                        <BasicButton 
+                            variant='contained'
+                            color='success'
+                            children='Activate'
+                            size='small'
+                            onClick={
+                                () => ToggleActivation({
+                                    id: params.row.id,
+                                    title: params.row.title,
+                                    author: params.row.author,
+                                    firstname: params.row.firstname,
+                                    middlename: params.row.middlename,
+                                    lastname: params.row.lastname,
+                                    status: 1
+                                })
+                            }
+                        />
+                    )
+                }
+            }
+        }
+    ]
+    const FetchPosts = () => {
+        setLoading(!loading)
+        new Http().fetchSomethingFromDB() // api from spring boot server
+        .then(res => {
+            setTimeout(() => {
+                setLoading(false)
+            setPosts(res.data)
+            }, 2000)
+        })
+    }
+    const FetchDataWhenClicked = () => {
+        FetchPosts()
     }
     return ( 
         <>
@@ -82,11 +193,24 @@ const HomePage = () => {
                     </Grid>
                     <Grid item xs={4}></Grid>
                 </Grid>
-                <List>
-                    {names.map((data: any, i) => (
-                        <ListItem key={i}>{data.name}</ListItem>
-                    ))}
-                </List>
+                <Container>
+                    <BasicCard style={{
+                        marginTop: '20px'
+                    }}>
+                        <BasicButton 
+                                sx={{ float: 'right', mt: 1, mb: 1}}
+                                children='FETCH DATA'
+                                variant='contained'
+                                color='primary'
+                                onClick={FetchDataWhenClicked}
+                        />
+                        <BasicDataGrid 
+                            columns={columns}
+                            data={posts}
+                            loading={loading}
+                        />
+                    </BasicCard>
+                </Container>
             </Container>
         </>
     )

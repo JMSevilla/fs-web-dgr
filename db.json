@@ -1,0 +1,32 @@
+{
+  "posts": [
+    {
+      "id": 1,
+      "title": "react typescript course",
+      "author": "jm",
+      "firstname": "ederson",
+      "middlename": "de leon",
+      "lastname": "marcial",
+      "status": 1
+    },
+    {
+      "id": 2,
+      "title": "react typescript course",
+      "author": "jm",
+      "firstname": "Kenneth",
+      "middlename": "G",
+      "lastname": "Sandig",
+      "status": 1
+    }
+  ],
+  "comments": [
+    {
+      "id": 1,
+      "body": "some comment",
+      "postId": 1
+    }
+  ],
+  "profile": {
+    "name": "typicode"
+  }
+}
