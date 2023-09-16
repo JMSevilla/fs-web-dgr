@@ -1,10 +1,17 @@
 import React, { useState, useEffect, useCallback, ChangeEvent, ReactElement } from 'react'
-import { ApplicationBar, BasicTextField, BasicCard, BasicButton, BasicDataGrid } from '../../components'
+import { ApplicationBar, BasicCard, BasicButton, BasicDataGrid } from '../../components'
 import { Container, Grid, Typography } from '@mui/material'
 import { useGlobalContext } from '../../core/context/GlobalContext'
 import { Http } from '../../core/api/http'
 import { useHistory } from 'react-router-dom'
 import { PostsDataUpdate } from '../../core/types'
+import { PostInfer, BasePostSchema } from '../../core/schema/post-schema'
+import { PostAtom } from '../../core/atoms/post-atom'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { FormProvider, useForm, useFormContext } from 'react-hook-form'
+import { ControlledTextField } from '../../components'
+import { useAtom } from 'jotai'
+import { AxiosResponse } from 'axios'
 type PostProps = { 
     id: number
     title: string
@@ -14,11 +21,83 @@ type PostProps = {
     lastname: string
     status: number
 }
+const PostForm = () => {
+    const {
+        control, setValue
+    } = useFormContext<PostInfer>()
+    useEffect(() => {
+        setValue('id', 4)
+        setValue('status', 1)
+    }, [])
+    return (
+        <>
+            <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
+                <Grid item xs={4}>
+                    <ControlledTextField 
+                        control={control}
+                        name='firstname'
+                        required
+                        shouldUnregister
+                        label='First name'
+                    />
+                </Grid>
+                <Grid item xs={4}>
+                    <ControlledTextField 
+                        control={control}
+                        name='middlename'
+                        shouldUnregister
+                        label='Middle name'
+                    />
+                </Grid>
+                <Grid item xs={4}>
+                <ControlledTextField 
+                        control={control}
+                        name='lastname'
+                        required
+                        shouldUnregister
+                        label='Last name'
+                    />
+                </Grid>
+            </Grid>
+            <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
+                <Grid item xs={6}>
+                    <ControlledTextField 
+                        control={control}
+                        name='title'
+                        shouldUnregister
+                        label='Title'
+                        required
+                    />
+                </Grid>
+                <Grid item xs={6}>
+                <ControlledTextField 
+                        control={control}
+                        name='author'
+                        shouldUnregister
+                        label='Author'
+                        required
+                    />
+                </Grid>
+            </Grid>
+        </>
+    )
+}
 
 const HomePage = () => {
     const [posts, setPosts] = useState<PostProps[]>([])
     const [loading, setLoading] = useState<boolean>(false)
+    const [postDetails, setPostDetails] = useAtom(PostAtom)
     const router = useHistory()
+
+    const form = useForm<PostInfer>({
+        mode: 'all',
+        resolver: zodResolver(BasePostSchema),
+        defaultValues : postDetails
+    })
+    const {
+        formState: { isValid },
+        handleSubmit
+    } = form;
     const {
         state,
         setState
@@ -137,18 +216,29 @@ const HomePage = () => {
         }
     ]
     const FetchPosts = () => {
-        setLoading(!loading)
         new Http().fetchSomethingFromDB() // api from spring boot server
         .then(res => {
-            setTimeout(() => {
-                setLoading(false)
             setPosts(res.data)
-            }, 2000)
         })
     }
     const FetchDataWhenClicked = () => {
-        FetchPosts()
+        
     }
+    const handleSave = () => {
+        handleSubmit(
+            (values) => {
+                new Http().createPost(values)
+                .then((res: AxiosResponse | undefined) => {
+                    console.log(res?.data)
+                    FetchPosts()
+                })
+            }
+        )()
+        return false;
+    }
+    useEffect(() => {
+        FetchPosts()
+    }, [])
     return ( 
         <>
             <ApplicationBar 
@@ -158,52 +248,35 @@ const HomePage = () => {
             <Container sx={{
                 marginTop: '100px'
             }} maxWidth='lg'>
-                <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
-                <Grid item xs={4}></Grid>
-                    <Grid item xs={4}>
-                        <BasicCard>
-                            <BasicTextField 
-                                label='Firstname'
-                                placeholder='Enter firstname'
-                                name='firstname'
-                                onChange={handleChangeEvent}
-                                value={state.firstname}
-                            />
-                            <BasicTextField 
-                                label='Middlename'
-                                placeholder='Enter middlename'
-                                name='middlename'
-                                onChange={handleChangeEvent}
-                                value={state.middlename}
-                            />
-                            <BasicTextField 
-                                label='Lastname'
-                                placeholder='Enter lastname'
-                                name='lastname'
-                                onChange={handleChangeEvent}
-                                value={state.lastname}
-                            />
-                            <BasicButton 
-                                sx={{ float: 'right', mt: 2, mb: 2}}
-                                children='SUBMIT'
-                                variant='contained'
-                                color='primary'
-                            />
-                        </BasicCard>
-                    </Grid>
-                    <Grid item xs={4}></Grid>
-                </Grid>
                 <Container>
+                    <BasicCard style={{ marginBottom: '20px'}}>
+                        {/* <PostForm /> */}
+                        <FormProvider {...form}>
+                            <PostForm />
+                            <BasicButton 
+                                sx={{
+                                    float: 'right',
+                                    mt: 2,
+                                    mb: 2
+                                }}
+                                variant='contained'
+                                size='small'
+                                children='SAVE'
+                                disabled={!isValid}
+                                onClick={handleSave}
+                            />
+                        </FormProvider>
+                    </BasicCard>
                     <BasicCard style={{
                         marginTop: '20px'
                     }}>
-                        <BasicButton 
+                        {/* <BasicButton 
                                 sx={{ float: 'right', mt: 1, mb: 1}}
                                 children='FETCH DATA'
                                 variant='contained'
                                 color='primary'
                                 onClick={FetchDataWhenClicked}
-                        />
+                        /> */}
                         <BasicDataGrid 
                             columns={columns}
                             data={posts}

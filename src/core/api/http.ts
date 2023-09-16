@@ -7,6 +7,9 @@ export class Http {
     public updatePostsChangeStatus(props: PostsDataUpdate) {
         return new Connect().init().put(`/posts/${props.id}`, props)
     }
+    public createPost(props: PostsDataUpdate){
+        return new Connect().init().post('/posts', props)
+    }
 }
 
 /**

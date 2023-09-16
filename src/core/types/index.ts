@@ -13,8 +13,8 @@ export type GlobalContextProps = {
 
 export type PostsDataUpdate = {
     id: number
-    title: string
-    author: string
+    title: string 
+    author: string 
     firstname: string
     middlename: string
     lastname: string

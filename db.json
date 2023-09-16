@@ -16,6 +16,24 @@
       "firstname": "Kenneth",
       "middlename": "G",
       "lastname": "Sandig",
+      "status": 0
+    },
+    {
+      "id": 3,
+      "title": "web dev",
+      "author": "ederson",
+      "firstname": "ederson",
+      "middlename": "test",
+      "lastname": "marcial",
+      "status": 1
+    },
+    {
+      "id": 4,
+      "title": "web dev full stack",
+      "author": "kenneth",
+      "firstname": "kenneth",
+      "middlename": "test",
+      "lastname": "sandig",
       "status": 1
     }
   ],
