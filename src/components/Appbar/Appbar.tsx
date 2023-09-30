@@ -30,6 +30,8 @@ export const ApplicationBar = ({onHandleClick, title} : AppBarProps) => {
             {title}
           </Typography>
             <Button color="inherit" onClick={onHandleClick}>About Us</Button>
+            <Button color="inherit" onClick={onHandleClick}>Contact Us</Button>
+            <Button color="inherit" onClick={onHandleClick}>Contact Us List</Button>
             </Toolbar>
         </AppBar>
         </Box>

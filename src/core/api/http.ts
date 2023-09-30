@@ -10,6 +10,9 @@ export class Http {
     public createPost(props: PostsDataUpdate){
         return new Connect().init().post('/posts', props)
     }
+    public deletePost(id: number) {
+        return new Connect().init().delete(`/posts/${id}`)
+    }
 }
 
 /**

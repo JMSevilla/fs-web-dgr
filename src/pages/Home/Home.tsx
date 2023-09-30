@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, ChangeEvent, ReactElement } from 'react'
+import React, { useState, useEffect, useCallback, ChangeEvent, ReactElement, useMemo } from 'react'
 import { ApplicationBar, BasicCard, BasicButton, BasicDataGrid } from '../../components'
 import { Container, Grid, Typography } from '@mui/material'
 import { useGlobalContext } from '../../core/context/GlobalContext'
@@ -12,6 +12,7 @@ import { FormProvider, useForm, useFormContext } from 'react-hook-form'
 import { ControlledTextField } from '../../components'
 import { useAtom } from 'jotai'
 import { AxiosResponse } from 'axios'
+import { useQuery, useMutation } from 'react-query'
 type PostProps = { 
     id: number
     title: string
@@ -96,19 +97,13 @@ const HomePage = () => {
     })
     const {
         formState: { isValid },
-        handleSubmit
+        handleSubmit, reset, setValue, watch
     } = form;
+    const idWatch = watch('id')
     const {
         state,
         setState
     } = useGlobalContext()
-    const handleChangeEvent = (event: ChangeEvent<HTMLInputElement>) => {
-        const { name, value } = event.target;
-        setState((prevState : any) => ({
-            ...prevState,
-            [name] : value
-        }))
-    }
     const navigateToAboutUs = () => {
         router.push({
             pathname: '/AboutUs/about-us',
@@ -117,128 +112,142 @@ const HomePage = () => {
             }
         })
     }
-    const ToggleActivation = (props: PostsDataUpdate) => {
-        new Http().updatePostsChangeStatus(props)
-        .then(res => {
-            setLoading(true)
-            setTimeout(() => {
-                setLoading(false)
-            setPosts(res.data)
-            }, 2000)
-            FetchPosts()
-        })
+    const { data, refetch } = useQuery({
+        queryKey: 'fetchPosts',
+        queryFn: () => new Http().fetchSomethingFromDB().then(res => res.data)
+    })
+    const useSubmission = () => {
+        return useMutation((data : PostsDataUpdate) => 
+            new Http().createPost(data)
+        );
     }
-    const columns = [
-        {
-            field: 'id',
-            headerName: 'ID', // column name
-            width: 80
-        },
-        {
-            field: 'title',
-            headerName: 'Title',
-            width: 170,
-            renderCell: (params: any) => (
-                <Typography variant='caption'>
-                    {params.row.title}
-                </Typography>
-            )
-        },
-        {
-            field: 'fullName',
-            headerName: 'Full Name',
-            valueGetter: (params: any) => `${params.row.firstname} ${params.row.middlename} ${params.row.lastname}`,
-            width: 180
-        },
-        {
-            field: 'author',
-            headerName: 'Author',
-            width: 80
-        },
-        {
-            field: 'status',
-            headerName: 'Status',
-            width: 80,
-            renderCell: (params: any) => {
-                if(params.row.status === 1){
-                    return `Active`
-                } else {
-                    return `Inactive`
-                }
-            }
-        },
-        {
-            headerName: 'Actions',
-            width: 170,
-            renderCell: (params: any) => {
-                if(params.row.status === 1) {
-                    return (
-                        <BasicButton 
-                            variant='contained'
-                            color='error'
-                            children='Deactivate'
-                            size='small'
-                            onClick={
-                                () => ToggleActivation({
-                                    id: params.row.id,
-                                    title: params.row.title,
-                                    author: params.row.author,
-                                    firstname: params.row.firstname,
-                                    middlename: params.row.middlename,
-                                    lastname: params.row.lastname,
-                                    status: 0
-                                })
-                            }
-                        />
-                    )
-                } else {
-                    return (
-                        <BasicButton 
-                            variant='contained'
-                            color='success'
-                            children='Activate'
-                            size='small'
-                            onClick={
-                                () => ToggleActivation({
-                                    id: params.row.id,
-                                    title: params.row.title,
-                                    author: params.row.author,
-                                    firstname: params.row.firstname,
-                                    middlename: params.row.middlename,
-                                    lastname: params.row.lastname,
-                                    status: 1
-                                })
-                            }
-                        />
-                    )
-                }
-            }
-        }
-    ]
-    const FetchPosts = () => {
-        new Http().fetchSomethingFromDB() // api from spring boot server
-        .then(res => {
-            setPosts(res.data)
-        })
-    }
-    const FetchDataWhenClicked = () => {
-        
-    }
+    const { mutateAsync } = useSubmission()
     const handleSave = () => {
-        handleSubmit(
-            (values) => {
-                new Http().createPost(values)
-                .then((res: AxiosResponse | undefined) => {
-                    console.log(res?.data)
-                    FetchPosts()
+            handleSubmit(async (values) => {
+                await mutateAsync(values, {
+                    onSuccess: async (response : AxiosResponse | undefined) => {
+                        await refetch()
+                        reset({})
+                    }
                 })
             }
         )()
         return false;
     }
+    const memoizedData = useMemo(() => {
+        const columns = [
+            {
+                field: 'id',
+                headerName: 'ID', // column name
+                width: 80
+            },
+            {
+                field: 'title',
+                headerName: 'Title',
+                width: 170,
+                renderCell: (params: any) => (
+                    <Typography variant='caption'>
+                        {params.row.title}
+                    </Typography>
+                )
+            },
+            {
+                field: 'fullName',
+                headerName: 'Full Name',
+                valueGetter: (params: any) => `${params.row.firstname} ${params.row.middlename} ${params.row.lastname}`,
+                width: 180
+            },
+            {
+                field: 'author',
+                headerName: 'Author',
+                width: 80
+            },
+            {
+                field: 'status',
+                headerName: 'Status',
+                width: 80,
+                renderCell: (params: any) => {
+                    if(params.row.status === 1){
+                        return `Active`
+                    } else {
+                        return `Inactive`
+                    }
+                }
+            },
+            {
+                headerName: 'Actions',
+                width: 250,
+                renderCell: (params: any) => {
+                    
+                    return (
+                        <div style={{
+                            display: 'flex'
+                        }}>
+                            <BasicButton 
+                                variant='contained'
+                                color={
+                                    params.row.status == 1 ? 'error' : 'success'
+                                }
+                                children={
+                                    params.row.status == 1 ? 'Deactivate' : 'Activate'
+                                }
+                                size='small'
+                                sx={{ 
+                                    mr: 2
+                                }}
+                                onClick={
+                                    () => ToggleActivation({
+                                        id: params.row.id,
+                                        title: params.row.title,
+                                        author: params.row.author,
+                                        firstname: params.row.firstname,
+                                        middlename: params.row.middlename,
+                                        lastname: params.row.lastname,
+                                        status: params.row.status == 1 ? 0 : 1
+                                    })
+                                }
+                            />
+                            <BasicButton 
+                                variant='contained'
+                                color='error'
+                                children='Delete'
+                                size='small'
+                                onClick={() => deletePost(params.row.id)}
+                            /> 
+                        </div>
+                    )
+                }
+            }
+        ]
+        const ToggleActivation = (props: PostsDataUpdate) => {
+            setLoading(true)
+            new Http().updatePostsChangeStatus(props)
+            .then(async res => {
+                setLoading(false)
+                await refetch()
+            })
+        }
+        function deletePost(id : number) {
+            new Http().deletePost(id)
+            .then(async() => {
+                await refetch()
+            })
+        }
+        return (
+            <>
+                <BasicDataGrid 
+                    columns={columns}
+                    data={data ?? posts}
+                    loading={loading}
+                />
+            </>
+        )
+    }, [data])
     useEffect(() => {
-        FetchPosts()
-    }, [])
+        let numId = 0
+        setValue('id', numId++)
+    }, [idWatch])
+    useEffect(() => {}, [isValid])
     return ( 
         <>
             <ApplicationBar 
@@ -270,18 +279,7 @@ const HomePage = () => {
                     <BasicCard style={{
                         marginTop: '20px'
                     }}>
-                        {/* <BasicButton 
-                                sx={{ float: 'right', mt: 1, mb: 1}}
-                                children='FETCH DATA'
-                                variant='contained'
-                                color='primary'
-                                onClick={FetchDataWhenClicked}
-                        /> */}
-                        <BasicDataGrid 
-                            columns={columns}
-                            data={posts}
-                            loading={loading}
-                        />
+                        {memoizedData}
                     </BasicCard>
                 </Container>
             </Container>
@@ -296,4 +294,7 @@ export default HomePage
  * Next TS
  * getLayout << Pages.. 
  * const getLayout = Component.getLayout ?? ((page) => page) // _app.tsx
+ * 
+ * React TS -> Single Render
+ * Next -> Re-render
  */
